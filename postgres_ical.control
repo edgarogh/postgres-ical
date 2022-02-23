@@ -1,0 +1,5 @@
+comment = 'postgres_ical:  Created by pgx'
+default_version = '@CARGO_VERSION@'
+module_pathname = '$libdir/postgres_ical'
+relocatable = false
+superuser = false

@@ -1,0 +1,13 @@
+[package]
+name = "postgres-ical-parser"
+version = "0.0.0"
+description = "One day, this will be its own crate"
+edition = "2018"
+publish = false
+
+[dependencies]
+chrono = "0.4.19"
+chrono-tz = "0.6.1"
+ical = "0.7.0"
+log = "0.4.14"
+thiserror = "1.0"
