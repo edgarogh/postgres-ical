@@ -12,9 +12,10 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: rust:1.58.1-alpine
+    container: rust
     steps:
       - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v1
       - name: cargo test
         run: cargo test --package postgres-ical-parser --package postgres-ical
   build:
@@ -22,5 +23,8 @@ jobs:
     container: timescaledev/rust-pgx
     steps:
     - uses: actions/checkout@v2
+    - uses: Swatinem/rust-cache@v1
+    - name: pgx init
+      run: cargo pgx init
     - name: pgx package
       run: cargo pgx package
