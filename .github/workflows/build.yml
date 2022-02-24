@@ -22,6 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     container: edgarogh/rust-pgx:1.58.1-0.3.3
     steps:
+    - run: |
+        usermod -aG postgres $USER
+        chmod 770 -R /home/postgres/.pgx
+        ln -s /home/postgres/.pgx /github/home/
     - uses: actions/checkout@v2
     - uses: Swatinem/rust-cache@v1
     - name: pgx package
