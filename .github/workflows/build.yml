@@ -21,10 +21,37 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container: edgarogh/rust-pgx:1.58.1-0.3.3
+    env:
+      HASH: ${GITHUB_SHA::7}
     steps:
     - name: symlink ~/.pgx
       run: ln -s /home/postgres/.pgx /github/home/
     - uses: actions/checkout@v2
     - uses: Swatinem/rust-cache@v1
     - name: pgx package
-      run: cargo pgx package
+      run: cargo pgx package --features pg10,pg11,pg12,pg13,pg14
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: postgres-ical-10_${HASH}
+        path: target/release/postgres_ical-pg10
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: postgres-ical-11_${HASH}
+        path: target/release/postgres_ical-pg11
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: postgres-ical-12_${HASH}
+        path: target/release/postgres_ical-pg12
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: postgres-ical-13_${HASH}
+        path: target/release/postgres_ical-pg13
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: postgres-ical-14_${HASH}
+        path: target/release/postgres_ical-pg14
