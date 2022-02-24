@@ -32,12 +32,17 @@ jobs:
     steps:
     - name: symlink ~/.pgx
       run: ln -s /home/postgres/.pgx /github/home/
+
     - uses: actions/checkout@v2
+
     - uses: Swatinem/rust-cache@v1
+      with:
+        key: pg${{ matrix.pg }}
+
     - name: pgx package
       run: cargo pgx package --no-default-features --features pg${{ matrix.pg }}
 
     - uses: actions/upload-artifact@v2
       with:
-        name: postgres-ical-${{ matrix.pg }}_${HASH}
+        name: postgres-ical-${{ matrix.pg }}_${{ env.HASH }}
         path: target/release/postgres_ical-pg${{ matrix.pg }}
