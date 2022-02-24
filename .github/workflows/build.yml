@@ -22,9 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     container: edgarogh/rust-pgx:1.58.1-0.3.3
 
-    env:
-      HASH: ${GITHUB_SHA::7}
-
     strategy:
       matrix:
         pg: [10, 11, 12, 13, 14]
@@ -44,5 +41,5 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: postgres-ical-${{ matrix.pg }}_${{ env.HASH }}
+        name: postgres-ical-${{ matrix.pg }}_${{ env.GITHUB_SHA }}
         path: target/release/postgres_ical-pg${{ matrix.pg }}
