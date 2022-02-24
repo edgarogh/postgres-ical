@@ -1,0 +1,45 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: rust
+    steps:
+      - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v1
+      - name: cargo test
+        run: cargo test --package postgres-ical-parser
+  build:
+    runs-on: ubuntu-latest
+    container: edgarogh/rust-pgx:1.58.1-0.3.3
+
+    strategy:
+      matrix:
+        pg: [10, 11, 12, 13, 14]
+
+    steps:
+    - name: symlink ~/.pgx
+      run: ln -s /home/postgres/.pgx /github/home/
+
+    - uses: actions/checkout@v2
+
+    - uses: Swatinem/rust-cache@v1
+      with:
+        key: pg${{ matrix.pg }}
+
+    - name: pgx package
+      run: cargo pgx package --no-default-features --features pg${{ matrix.pg }}
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: postgres-ical-${{ matrix.pg }}_${{ env.GITHUB_SHA }}
+        path: target/release/postgres_ical-pg${{ matrix.pg }}
