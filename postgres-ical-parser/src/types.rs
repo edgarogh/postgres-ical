@@ -32,9 +32,8 @@ impl IcalType for IcalDateTime {
             None => (value, false),
         };
 
-        let date_time = match NaiveDateTime::parse_from_str(date_time, "%Y%m%dT%H%M%S") {
-            Ok(date_time) => date_time,
-            Err(_) => return Err(value_string), // TODO
+        let Ok(date_time) = NaiveDateTime::parse_from_str(date_time, "%Y%m%dT%H%M%S") else {
+            return Err(value_string); // TODO
         };
 
         let params = property.params.as_deref().unwrap_or_default();
