@@ -70,7 +70,7 @@ macro_rules! event_from_properties {
 
             match $property.name.to_ascii_uppercase().as_str() {
                 $($name => $var = event_from_properties!(@s $name; $property; $ical_type $(= $default)?),)*
-                name => return Err(CalendarParseError::UnknownProperty(name.into())),
+                _ => (), // Unknown property
             }
         }
 

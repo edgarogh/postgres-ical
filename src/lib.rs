@@ -1,12 +1,13 @@
 use chrono::{Datelike, Timelike};
 use curl::easy::Easy;
-use pgx::*;
-use pgx_named_columns::*;
+use pgrx::*;
+use pgrx_named_columns::*;
 use pipe::PipeReader;
 use postgres_ical_parser::types::IcalDateTime;
 use postgres_ical_parser::{CalendarParseError, Event};
 use std::io::{BufRead, BufReader, Cursor, Write};
 use std::thread::JoinHandle;
+use pgrx::datum::{Timestamp, TimestampWithTimeZone};
 use time::{PrimitiveDateTime, UtcOffset};
 
 pg_module_magic!();
@@ -63,16 +64,23 @@ fn to_time(d: impl Datelike + Timelike) -> PrimitiveDateTime {
 
 fn serialize_datetime(date: IcalDateTime) -> (Option<TimestampWithTimeZone>, Option<Timestamp>) {
     match date {
-        IcalDateTime::Naive(naive) => (None, Some(Timestamp::new(to_time(naive)))),
-        IcalDateTime::Utc(utc) => (
-            Some(TimestampWithTimeZone::new(to_time(utc), UtcOffset::UTC)),
-            None,
-        ),
+        IcalDateTime::Naive(naive) => {
+            let dt = to_time(naive);
+            (None, Some(Timestamp::new(dt.year(), dt.month() as u8, dt.day(), dt.hour(), dt.minute(), dt.second() as _).unwrap()))
+        },
+        IcalDateTime::Utc(utc) => {
+            let dt = to_time(utc);
+            (
+                Some(TimestampWithTimeZone::with_timezone(dt.year(), dt.month() as u8, dt.day(), dt.hour(), dt.minute(), dt.second() as _, "UTC").unwrap()),
+                None,
+            )
+        },
         IcalDateTime::Tz(tz) => {
             use chrono::Offset;
             let offset = tz.offset().fix().local_minus_utc();
             let offset = UtcOffset::from_whole_seconds(offset).unwrap();
-            (Some(TimestampWithTimeZone::new(to_time(tz), offset)), None)
+            let dt = to_time(tz);
+            (Some(TimestampWithTimeZone::with_timezone(dt.year(), dt.month() as u8, dt.day(), dt.hour(), dt.minute(), dt.second() as _, offset.to_string()).unwrap()), None)
         }
     }
 }
@@ -206,7 +214,7 @@ fn pg_ical_internal(calendar: impl BufRead) -> impl Iterator<Item = Component> {
 ///
 /// [ical]: https://datatracker.ietf.org/doc/html/rfc5545
 #[pg_extern_columns("src/lib.rs")]
-pub fn pg_ical(calendar: String) -> impl Iterator<Item = Component> {
+pub fn pg_ical(calendar: String) -> ::pgrx::iter::TableIterator<'static, Component> {
     pg_ical_internal(BufReader::new(Cursor::new(calendar.into_bytes())))
 }
 
@@ -218,7 +226,7 @@ pub fn pg_ical(calendar: String) -> impl Iterator<Item = Component> {
 ///
 /// [ical]: https://datatracker.ietf.org/doc/html/rfc5545
 #[pg_extern_columns("src/lib.rs")]
-pub fn pg_ical_curl(url: &str) -> impl Iterator<Item = Component> {
+pub fn pg_ical_curl(url: &str) -> ::pgrx::iter::TableIterator<'static, Component> {
     let (reader, handle) = curl_get(url);
     let mut handle = Some(handle);
 
